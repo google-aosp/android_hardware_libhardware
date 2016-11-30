@@ -25,6 +25,8 @@
 #include <hardware/hardware.h>
 #include <hardware/power.h>
 
+#define TARGET_TAP_TO_WAKE_NODE "/sys/android_touch/doubletap2wake"
+
 static void power_init(struct power_module *module)
 {
 }
@@ -37,6 +39,18 @@ static void power_hint(struct power_module *module, power_hint_t hint,
                        void *data) {
     switch (hint) {
     default:
+        break;
+    }
+}
+
+static void samsung_set_feature(struct power_module *module, feature_t feature, int state __unused)
+{
+    struct samsung_power_module *samsung_pwr = (struct samsung_power_module *) module;
+
+    switch (feature) {
+        case POWER_FEATURE_DOUBLE_TAP_TO_WAKE:
+            ALOGV("%s: %s double tap to wake", __func__, state ? "enabling" : "disabling");
+            sysfs_write(TARGET_TAP_TO_WAKE_NODE, state > 0 ? "1" : "0");
         break;
     }
 }
@@ -59,4 +73,5 @@ struct power_module HAL_MODULE_INFO_SYM = {
     .init = power_init,
     .setInteractive = power_set_interactive,
     .powerHint = power_hint,
+    .setFeature = samsung_set_feature
 };
